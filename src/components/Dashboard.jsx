@@ -100,7 +100,7 @@ export default function Dashboard({ role }) {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--text-dim)' }}>
-                      {script.angle}
+                      {script.topic}
                     </p>
                     <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>
                       {script.hook}
