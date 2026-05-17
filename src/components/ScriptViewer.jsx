@@ -5,13 +5,14 @@ export default function ScriptViewer({ script, role, onStatusUpdate, onClose }) 
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
+    const fullText = `${script.hook}\n\n${script.full_script}`;
     try {
-      await navigator.clipboard.writeText(script.full_script);
+      await navigator.clipboard.writeText(fullText);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       const ta = document.createElement('textarea');
-      ta.value = script.full_script;
+      ta.value = fullText;
       ta.style.position = 'fixed';
       ta.style.left = '-9999px';
       document.body.appendChild(ta);
