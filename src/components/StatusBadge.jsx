@@ -18,10 +18,27 @@ export default function StatusBadge({ status, role, onUpdate }) {
     return false;
   };
 
+  const canGoBack = () => {
+    if (currentIdx === 0) return false;
+    if (role === 'talent' && status === 'Filmed') return true;
+    if (role === 'admin' && currentIdx > 0) return true;
+    return false;
+  };
+
   const nextStatus = STATUS_ORDER[currentIdx + 1];
+  const prevStatus = STATUS_ORDER[currentIdx - 1];
 
   return (
     <div className="flex items-center gap-2">
+      {canGoBack() && prevStatus && (
+        <button
+          onClick={() => onUpdate(prevStatus)}
+          className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider cursor-pointer transition-opacity hover:opacity-80"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+        >
+          ← {prevStatus}
+        </button>
+      )}
       <span
         className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
         style={{ background: style.bg, border: `1px solid ${style.border}`, color: style.color }}
