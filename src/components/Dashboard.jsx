@@ -7,7 +7,7 @@ import StatusBadge from './StatusBadge';
 export default function Dashboard({ role }) {
   const [scripts, setScripts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(new Date().toLocaleDateString('en-CA'));
   const [weekOffset, setWeekOffset] = useState(0);
   const [viewingScript, setViewingScript] = useState(null);
 
