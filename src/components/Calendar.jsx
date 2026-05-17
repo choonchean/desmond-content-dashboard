@@ -14,7 +14,7 @@ function getWeekDates(offset = 0) {
 }
 
 function formatDate(d) {
-  return d.toISOString().split('T')[0];
+  return d.toLocaleDateString('en-CA');
 }
 
 function isToday(d) {
