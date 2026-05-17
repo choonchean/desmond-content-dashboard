@@ -2,14 +2,13 @@ import { useState, useEffect } from 'react';
 import { fetchAllScripts, updateScriptStatus } from '../api';
 import Calendar from './Calendar';
 import ScriptViewer from './ScriptViewer';
-import StatusBadge from './StatusBadge';
 
 export default function Dashboard({ role }) {
   const [scripts, setScripts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toLocaleDateString('en-CA'));
   const [weekOffset, setWeekOffset] = useState(0);
-  const [viewingScript, setViewingScript] = useState(null);
+  const [viewingGroup, setViewingGroup] = useState(null); // array of scripts for one topic
 
   useEffect(() => {
     loadScripts();
@@ -28,13 +27,35 @@ export default function Dashboard({ role }) {
 
   const handleStatusUpdate = async (id, newStatus) => {
     setScripts(prev => prev.map(s => s.id === id ? { ...s, status: newStatus } : s));
-    if (viewingScript && viewingScript.id === id) {
-      setViewingScript(prev => ({ ...prev, status: newStatus }));
+    if (viewingGroup) {
+      setViewingGroup(prev => prev.map(s => s.id === id ? { ...s, status: newStatus } : s));
     }
     await updateScriptStatus(id, newStatus);
   };
 
   const dayScripts = scripts.filter(s => s.date === selectedDate);
+
+  // Group by topic
+  const topicGroups = dayScripts.reduce((acc, script) => {
+    if (!acc[script.topic]) acc[script.topic] = [];
+    acc[script.topic].push(script);
+    return acc;
+  }, {});
+  const groupedList = Object.entries(topicGroups); // [[topic, [scripts...]], ...]
+
+  const getGroupStatus = (scripts) => {
+    if (scripts.every(s => s.status === 'Posted')) return 'Posted';
+    if (scripts.some(s => s.status === 'Edited')) return 'Edited';
+    if (scripts.some(s => s.status === 'Filmed')) return 'Filmed';
+    return 'Scripted';
+  };
+
+  const STATUS_COLORS = {
+    Scripted: '#5ed3f3',
+    Filmed: '#ff9f43',
+    Edited: '#b794f4',
+    Posted: '#c8f55a',
+  };
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
@@ -69,19 +90,18 @@ export default function Dashboard({ role }) {
           onWeekChange={setWeekOffset}
         />
 
-        {/* Day Scripts */}
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
             {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', month: 'short', day: 'numeric' })}
           </h2>
           <span className="text-xs" style={{ color: 'var(--text-dim)' }}>
-            {dayScripts.length} script{dayScripts.length !== 1 ? 's' : ''}
+            {groupedList.length} topic{groupedList.length !== 1 ? 's' : ''}
           </span>
         </div>
 
         {loading ? (
           <div className="text-center py-12" style={{ color: 'var(--text-dim)' }}>Loading...</div>
-        ) : dayScripts.length === 0 ? (
+        ) : groupedList.length === 0 ? (
           <div className="text-center py-12 rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <p className="text-lg mb-1" style={{ color: 'var(--text-dim)' }}>No scripts for this day</p>
             <p className="text-xs" style={{ color: 'var(--text-dim)' }}>
@@ -90,44 +110,47 @@ export default function Dashboard({ role }) {
           </div>
         ) : (
           <div className="space-y-3">
-            {dayScripts.map(script => (
-              <div
-                key={script.id}
-                className="p-5 rounded-xl cursor-pointer transition-all hover:scale-[1.01]"
-                style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-                onClick={() => setViewingScript(script)}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--text-dim)' }}>
-                      {script.topic}
-                    </p>
-                    <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>
-                      {script.hook}
-                    </p>
+            {groupedList.map(([topic, angleScripts]) => {
+              const groupStatus = getGroupStatus(angleScripts);
+              const statusColor = STATUS_COLORS[groupStatus];
+              return (
+                <div
+                  key={topic}
+                  className="p-5 rounded-xl cursor-pointer transition-all hover:scale-[1.01]"
+                  style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+                  onClick={() => setViewingGroup(angleScripts)}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{topic}</p>
+                      <p className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>
+                        {angleScripts.length} angle{angleScripts.length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    <span
+                      className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
+                      style={{
+                        background: `${statusColor}22`,
+                        border: `1px solid ${statusColor}55`,
+                        color: statusColor,
+                      }}
+                    >
+                      {groupStatus}
+                    </span>
                   </div>
-                  <StatusBadge
-                    status={script.status}
-                    role={role}
-                    onUpdate={(s) => {
-                      event.stopPropagation();
-                      handleStatusUpdate(script.id, s);
-                    }}
-                  />
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* Script Viewer Modal */}
-      {viewingScript && (
+      {viewingGroup && (
         <ScriptViewer
-          script={viewingScript}
+          scripts={viewingGroup}
           role={role}
           onStatusUpdate={handleStatusUpdate}
-          onClose={() => setViewingScript(null)}
+          onClose={() => setViewingGroup(null)}
         />
       )}
     </div>
