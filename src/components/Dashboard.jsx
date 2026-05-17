@@ -43,11 +43,12 @@ export default function Dashboard({ role }) {
   }, {});
   const groupedList = Object.entries(topicGroups); // [[topic, [scripts...]], ...]
 
+  const STATUS_ORDER = ['Scripted', 'Filmed', 'Edited', 'Posted'];
+
   const getGroupStatus = (scripts) => {
-    if (scripts.every(s => s.status === 'Posted')) return 'Posted';
-    if (scripts.some(s => s.status === 'Edited')) return 'Edited';
-    if (scripts.some(s => s.status === 'Filmed')) return 'Filmed';
-    return 'Scripted';
+    // Show the lowest status across all angles (bottleneck)
+    const minIdx = Math.min(...scripts.map(s => STATUS_ORDER.indexOf(s.status)));
+    return STATUS_ORDER[minIdx] || 'Scripted';
   };
 
   const STATUS_COLORS = {
@@ -123,12 +124,20 @@ export default function Dashboard({ role }) {
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex-1">
                       <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{topic}</p>
-                      <p className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>
-                        {angleScripts.length} angle{angleScripts.length !== 1 ? 's' : ''}
-                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        {angleScripts.map((s, i) => (
+                          <div key={i} className="flex items-center gap-1">
+                            <div
+                              className="w-2 h-2 rounded-full"
+                              style={{ background: STATUS_COLORS[s.status] }}
+                            />
+                            <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{s.angle}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                     <span
-                      className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
+                      className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shrink-0"
                       style={{
                         background: `${statusColor}22`,
                         border: `1px solid ${statusColor}55`,
