@@ -140,7 +140,7 @@ export default function Dashboard({ role }) {
                       return (
                         <div key={s.id} className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full shrink-0" style={{ background: sColor }} />
-                          <span className="text-xs flex-1" style={{ color: 'var(--text-dim)' }}>{s.angle}</span>
+                          <span className="text-xs flex-1" style={{ color: 'var(--text-dim)' }}>{s.hook}</span>
                           <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                             {canGoBack && (
                               <button
