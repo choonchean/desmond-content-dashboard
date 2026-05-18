@@ -112,40 +112,64 @@ export default function Dashboard({ role }) {
         ) : (
           <div className="space-y-3">
             {groupedList.map(([topic, angleScripts]) => {
-              const groupStatus = getGroupStatus(angleScripts);
-              const statusColor = STATUS_COLORS[groupStatus];
               return (
                 <div
                   key={topic}
-                  className="p-5 rounded-xl cursor-pointer transition-all hover:scale-[1.01]"
+                  className="p-5 rounded-xl"
                   style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-                  onClick={() => setViewingGroup(angleScripts)}
                 >
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{topic}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        {angleScripts.map((s, i) => (
-                          <div key={i} className="flex items-center gap-1">
-                            <div
-                              className="w-2 h-2 rounded-full"
-                              style={{ background: STATUS_COLORS[s.status] }}
-                            />
-                            <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{s.angle}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <span
-                      className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shrink-0"
-                      style={{
-                        background: `${statusColor}22`,
-                        border: `1px solid ${statusColor}55`,
-                        color: statusColor,
-                      }}
+                  {/* Topic header */}
+                  <div className="flex items-center justify-between gap-4 mb-3">
+                    <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{topic}</p>
+                    <button
+                      onClick={() => setViewingGroup(angleScripts)}
+                      className="text-xs px-3 py-1 rounded-lg cursor-pointer shrink-0"
+                      style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
                     >
-                      {groupStatus}
-                    </span>
+                      Read →
+                    </button>
+                  </div>
+
+                  {/* Per-angle status rows */}
+                  <div className="space-y-2">
+                    {angleScripts.map((s) => {
+                      const currentIdx = STATUS_ORDER.indexOf(s.status);
+                      const sColor = STATUS_COLORS[s.status];
+                      const canAdvance = s.status !== 'Posted' && (role === 'admin' || (role === 'talent' && s.status === 'Scripted'));
+                      const canGoBack = currentIdx > 0 && (role === 'admin' || (role === 'talent' && s.status === 'Filmed'));
+                      return (
+                        <div key={s.id} className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full shrink-0" style={{ background: sColor }} />
+                          <span className="text-xs flex-1" style={{ color: 'var(--text-dim)' }}>{s.angle}</span>
+                          <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                            {canGoBack && (
+                              <button
+                                onClick={() => handleStatusUpdate(s.id, STATUS_ORDER[currentIdx - 1])}
+                                className="px-2 py-0.5 rounded text-xs cursor-pointer"
+                                style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+                              >
+                                ←
+                              </button>
+                            )}
+                            <span
+                              className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider"
+                              style={{ background: `${sColor}22`, border: `1px solid ${sColor}55`, color: sColor }}
+                            >
+                              {s.status}
+                            </span>
+                            {canAdvance && (
+                              <button
+                                onClick={() => handleStatusUpdate(s.id, STATUS_ORDER[currentIdx + 1])}
+                                className="px-2 py-0.5 rounded text-xs cursor-pointer"
+                                style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+                              >
+                                →
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
